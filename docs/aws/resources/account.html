@@ -5723,6 +5723,8 @@
 <p>Returns an annotated account resource if trail is not enabled.</p>
 <p>Of particular note, the current-region option will evaluate whether cloudtrail is available
 in the current region, either as a multi region trail or as a trail with it as the home region.</p>
+<p>The log-metric-filter-pattern option checks for the existence of a cloudwatch alarm and a
+corresponding SNS subscription for a specific filter pattern</p>
 <dl class="field-list simple">
 <dt class="field-odd">example</dt>
 <dd class="field-odd"><p></p></dd>
@@ -5736,6 +5738,8 @@ in the current region, either as a multi region trail or as a trail with it as t
 <span class="w">        </span><span class="nt">global-events</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"></span>
 <span class="w">        </span><span class="nt">multi-region</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"></span>
 <span class="w">        </span><span class="nt">running</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"></span>
+<span class="w">        </span><span class="nt">include-management-events</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"></span>
+<span class="w">        </span><span class="nt">log-metric-filter-pattern</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;{</span><span class="nv"> </span><span class="s">($.eventName</span><span class="nv"> </span><span class="s">=</span><span class="nv"> </span><span class="s">\&quot;ConsoleLogin\&quot;)</span><span class="nv"> </span><span class="s">}&quot;</span><span class="w"></span>
 </pre></div>
 </div>
 <div class="toggle docutils container">
@@ -5746,9 +5750,13 @@ in the current region, either as a multi region trail or as a trail with it as t
 <span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">boolean</span><span class="w"></span>
 <span class="w">  </span><span class="nt">global-events</span><span class="p">:</span><span class="w"></span>
 <span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">boolean</span><span class="w"></span>
+<span class="w">  </span><span class="nt">include-management-events</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">boolean</span><span class="w"></span>
 <span class="w">  </span><span class="nt">kms</span><span class="p">:</span><span class="w"></span>
 <span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">boolean</span><span class="w"></span>
 <span class="w">  </span><span class="nt">kms-key</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">string</span><span class="w"></span>
+<span class="w">  </span><span class="nt">log-metric-filter-pattern</span><span class="p">:</span><span class="w"></span>
 <span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">string</span><span class="w"></span>
 <span class="w">  </span><span class="nt">multi-region</span><span class="p">:</span><span class="w"></span>
 <span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">boolean</span><span class="w"></span>
@@ -5764,7 +5772,7 @@ in the current region, either as a multi region trail or as a trail with it as t
 </pre></div>
 </div>
 </div>
-<p>Permissions - cloudtrail:DescribeTrails, cloudtrail:GetTrailStatus</p>
+<p>Permissions - cloudtrail:DescribeTrails, cloudtrail:GetTrailStatus, cloudtrail:GetEventSelectors, cloudwatch:DescribeAlarmsForMetric, logs:DescribeMetricFilters, sns:ListSubscriptions</p>
 </section>
 <section id="check-config">
 <span id="aws-account-filters-check-config"></span><h3>check-config<a class="headerlink" href="#check-config" title="Permalink to this headline">¶</a></h3>

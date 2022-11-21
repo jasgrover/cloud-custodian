@@ -5750,6 +5750,7 @@ target.</p>
 <li><p><a class="reference internal" href="aws-common-actions.html#aws-common-actions-post-item"><span class="std std-ref">post-item</span></a></p></li>
 <li><p><a class="reference internal" href="aws-common-actions.html#aws-common-actions-put-metric"><span class="std std-ref">put-metric</span></a></p></li>
 <li><p><a class="reference internal" href="aws-common-actions.html#aws-common-actions-remove-tag"><span class="std std-ref">remove-tag</span></a></p></li>
+<li><p><a class="reference internal" href="#aws-event-rule-actions-set-rule-state"><span class="std std-ref">set-rule-state</span></a></p></li>
 <li><p><a class="reference internal" href="aws-common-actions.html#aws-common-actions-tag"><span class="std std-ref">tag</span></a></p></li>
 <li><p><a class="reference internal" href="aws-common-actions.html#aws-common-actions-webhook"><span class="std std-ref">webhook</span></a></p></li>
 </ul>
@@ -5784,6 +5785,28 @@ target.</p>
 </div>
 </div>
 <p>Permissions - events:DeleteRule, events:RemoveTargets, events:ListTargetsByRule</p>
+</section>
+<section id="set-rule-state">
+<span id="aws-event-rule-actions-set-rule-state"></span><h3>set-rule-state<a class="headerlink" href="#set-rule-state" title="Permalink to this headline">¶</a></h3>
+<p>This action allows to enable/disable a rule</p>
+<dl class="field-list simple">
+<dt class="field-odd">example</dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+<div class="toggle docutils container">
+<div class="header docutils container" style=""></div><div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">properties</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="nt">enabled</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">default</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"></span>
+<span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">boolean</span><span class="w"></span>
+<span class="w">  </span><span class="nt">type</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">enum</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">set-rule-state</span><span class="w"></span>
+<span class="nt">required</span><span class="p">:</span><span class="w"></span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">type</span><span class="w"></span>
+</pre></div>
+</div>
+</div>
+<p>Permissions - events:EnableRule, events:DisableRule</p>
 </section>
 </section>
 </section>
