@@ -1437,6 +1437,14 @@
 </li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="../aws/resources/group-route53-recovery-readiness.html">route53-recovery-readiness resources</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../aws/resources/readiness-check.html">aws.readiness-check</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../aws/resources/readiness-check.html#filters">Filters</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../aws/resources/readiness-check.html#actions">Actions</a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="../aws/resources/group-route53domains.html">route53domains resources</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../aws/resources/r53domain.html">aws.r53domain</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../aws/resources/r53domain.html#filters">Filters</a></li>
@@ -5792,12 +5800,12 @@ page.</p>
 <h3>Troubleshooting &amp; Tinkering<a class="headerlink" href="#troubleshooting-tinkering" title="Permalink to this headline">¶</a></h3>
 <p>The policy is validated automatically when you run it, but you can also
 validate it separately:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>custodian validate custodian.yml
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>custodian<span class="w"> </span>validate<span class="w"> </span>custodian.yml
 </pre></div>
 </div>
 <p>You can also check which resources are identified by the policy, without
 running any actions on the resources:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>custodian run --dryrun -s . custodian.yml
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>custodian<span class="w"> </span>run<span class="w"> </span>--dryrun<span class="w"> </span>-s<span class="w"> </span>.<span class="w"> </span>custodian.yml
 </pre></div>
 </div>
 </section>
