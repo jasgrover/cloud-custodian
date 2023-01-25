@@ -176,6 +176,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../aws/examples/s3globalgrants.html">S3 - Global Grants</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../aws/examples/s3lifecyclepolicyonbucketdelete.html">S3 - Add lifecycle policy on bucket delete</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../aws/examples/sagemakernotebookdeletepublicorunencrypted.html">SageMaker Notebook - Delete Public or Unencrypted</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../aws/examples/securitygroupsaddpermission.html">Security Groups - add permission</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../aws/examples/securitygroupsdetectremediate.html">Security Groups - Detect and Remediate Violations</a></li>
@@ -970,6 +971,14 @@
 <li class="toctree-l3"><a class="reference internal" href="../aws/resources/emr-security-configuration.html">aws.emr-security-configuration</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../aws/resources/emr-security-configuration.html#filters">Filters</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../aws/resources/emr-security-configuration.html#actions">Actions</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../aws/resources/group-emr-serverless.html">emr-serverless resources</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../aws/resources/emr-serverless-app.html">aws.emr-serverless-app</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../aws/resources/emr-serverless-app.html#filters">Filters</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../aws/resources/emr-serverless-app.html#actions">Actions</a></li>
 </ul>
 </li>
 </ul>
@@ -5516,10 +5525,13 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Custodian policies for Infrastructure Code</a></li>
-<li class="toctree-l1"><a class="reference internal" href="#install">Install</a></li>
-<li class="toctree-l1"><a class="reference internal" href="#usage">Usage</a></li>
-<li class="toctree-l1"><a class="reference internal" href="#outputs">Outputs</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Custodian policies for Infrastructure Code</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#install">Install</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#usage">Usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#filters">Filters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#outputs">Outputs</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="c7n-logexporter.html">c7n-log-exporter: Cloud watch log exporter automation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="c7n-logexporter.html#features">Features</a></li>
 <li class="toctree-l2"><a class="reference internal" href="c7n-logexporter.html#assumptions">Assumptions</a></li>
@@ -5652,9 +5664,8 @@
 against infrastructure as code source assets.</p>
 <p>It also provides a separate cli for better command line ux for
 source asset evaluation.</p>
-</section>
 <section id="install">
-<h1>Install<a class="headerlink" href="#install" title="Permalink to this headline">¶</a></h1>
+<h2>Install<a class="headerlink" href="#install" title="Permalink to this headline">¶</a></h2>
 <p>We currently only support python 3.10 on mac and linux. We plan to
 expand support for additional operating systems and python versions
 over time.</p>
@@ -5663,19 +5674,27 @@ over time.</p>
 </div>
 </section>
 <section id="usage">
-<h1>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h1>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>c7n-left<span class="w"> </span>run<span class="w"> </span>--help
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>❯<span class="w"> </span>c7n-left<span class="w"> </span>run<span class="w"> </span>--help
 
 Usage:<span class="w"> </span>c7n-left<span class="w"> </span>run<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span>
 
-<span class="w">  </span>evaluate<span class="w"> </span>policies<span class="w"> </span>against<span class="w"> </span>iac<span class="w"> </span>sources
+<span class="w">  </span>evaluate<span class="w"> </span>policies<span class="w"> </span>against<span class="w"> </span>IaC<span class="w"> </span>sources.
+
+<span class="w">  </span>c7n-left<span class="w"> </span>-p<span class="w"> </span>policy_dir<span class="w"> </span>-d<span class="w"> </span>terraform_root<span class="w"> </span>--filters<span class="w"> </span><span class="s2">&quot;severity=HIGH&quot;</span>
+
+<span class="w">  </span>WARNING<span class="w"> </span>-<span class="w"> </span>CLI<span class="w"> </span>interface<span class="w"> </span>subject<span class="w"> </span>to<span class="w"> </span>change.
 
 Options:
 <span class="w">  </span>--format<span class="w"> </span>TEXT
+<span class="w">  </span>--filters<span class="w"> </span>TEXT<span class="w">                  </span>filter<span class="w"> </span>policies<span class="w"> </span>or<span class="w"> </span>resources<span class="w"> </span>as<span class="w"> </span><span class="nv">k</span><span class="o">=</span>v<span class="w"> </span>pairs
+<span class="w">                                  </span>with<span class="w"> </span>globbing
 <span class="w">  </span>-p,<span class="w"> </span>--policy-dir<span class="w"> </span>PATH
 <span class="w">  </span>-d,<span class="w"> </span>--directory<span class="w"> </span>PATH
 <span class="w">  </span>-o,<span class="w"> </span>--output<span class="w"> </span><span class="o">[</span>cli<span class="p">|</span>github<span class="p">|</span>json<span class="o">]</span>
 <span class="w">  </span>--output-file<span class="w"> </span>FILENAME
+<span class="w">  </span>--output-query<span class="w"> </span>TEXT
+<span class="w">  </span>--summary<span class="w"> </span><span class="o">[</span>policy<span class="p">|</span>resource<span class="o">]</span>
 <span class="w">  </span>--help<span class="w">                          </span>Show<span class="w"> </span>this<span class="w"> </span>message<span class="w"> </span>and<span class="w"> </span>exit.
 </pre></div>
 </div>
@@ -5704,10 +5723,48 @@ Execution<span class="w"> </span><span class="nb">complete</span><span class="w"
 </pre></div>
 </div>
 </section>
+<section id="filters">
+<h2>Filters<a class="headerlink" href="#filters" title="Permalink to this headline">¶</a></h2>
+<p>Which policies and which resources are evaluated can be controlled via
+command line via <code class="docutils literal notranslate"><span class="pre">--filters</span></code> option.</p>
+<p>Available filters</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">name</span></code> - policy name</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">category</span></code> - policy category</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">severity</span></code> - minimum policy severity (unknown, low, medium, high, critical)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">type</span></code> - resource type, ie. aws_security_group</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">id</span></code> - resource id  ie. aws_vpc.example</p></li>
+</ul>
+<p>Multiple values for a given filter can be specified as comma separate values, and all filters
+except severity support globbing.</p>
+<p>Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># run all encryption policies on ebs volumes and sqs queues</span>
+<span class="n">c7n</span><span class="o">-</span><span class="n">left</span> <span class="n">run</span> <span class="o">-</span><span class="n">p</span> <span class="n">policy_dir</span> <span class="o">-</span><span class="n">d</span> <span class="n">terraform</span> <span class="o">--</span><span class="n">filters</span><span class="o">=</span><span class="s2">&quot;category=encryption type=aws_ebs_volume,aws_sqs_queue&quot;</span>
+
+<span class="c1"># run all medium and higher level policies cost policies</span>
+<span class="n">c7n</span><span class="o">-</span><span class="n">left</span> <span class="n">run</span> <span class="o">-</span><span class="n">p</span> <span class="n">policy_dir</span> <span class="o">-</span><span class="n">d</span> <span class="n">terraform</span> <span class="o">--</span><span class="n">filters</span><span class="o">=</span><span class="s2">&quot;severity=medium category=cost&quot;</span>
+</pre></div>
+</div>
+<p>policy values for severity and category are specified in its metadata section. ie</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">policies</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">check-encryption</span>
+<span class="w">    </span><span class="nt">resource</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">aws_ebs_volume</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">aws_sqs_queue</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">metadata</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">category</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">encryption</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">security</span><span class="p p-Indicator">]</span>
+<span class="w">      </span><span class="nt">severity</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">high</span>
+<span class="w">    </span><span class="nt">filters</span><span class="p">:</span>
+<span class="w">       </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">kms_master_key_id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">absent</span>
+</pre></div>
+</div>
+</section>
 <section id="outputs">
-<h1>Outputs<a class="headerlink" href="#outputs" title="Permalink to this headline">¶</a></h1>
+<h2>Outputs<a class="headerlink" href="#outputs" title="Permalink to this headline">¶</a></h2>
 <p>if your using this in github actions, we have special output mode
-for reporting annotations directly into the ui.</p>
+for reporting annotations directly into pull requests with <code class="docutils literal notranslate"><span class="pre">--output</span> <span class="pre">github</span></code></p>
+<p>We also display a summary output after displaying resource matches, there are
+two summary displays available, the default policy summary, and a resource summary
+which can be enabled via <code class="docutils literal notranslate"><span class="pre">--summary</span> <span class="pre">resource</span></code>.</p>
+</section>
 </section>
 
 
