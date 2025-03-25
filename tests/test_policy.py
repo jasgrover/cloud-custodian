@@ -206,7 +206,7 @@ class PolicyMetaLint(BaseTest):
             {'account', 's3', 'hostedzone', 'log-group', 'rest-api', 'redshift-snapshot',
              'rest-stage', 'codedeploy-app', 'codedeploy-group', 'fis-template', 'dlm-policy',
              'apigwv2', 'apigwv2-stage', 'apigw-domain-name', 'fis-experiment',
-             'launch-template-version'})
+             'launch-template-version', 'glue-table'})
         if overrides:
             raise ValueError("unknown arn overrides in %s" % (", ".join(overrides)))
 
@@ -488,10 +488,6 @@ class PolicyMetaLint(BaseTest):
             "AWS::ImageBuilder::ImagePipeline",
             "AWS::IoT::FleetMetric",
             "AWS::IoTWireless::ServiceProfile",
-            "AWS::NetworkManager::Device",
-            "AWS::NetworkManager::GlobalNetwork",
-            "AWS::NetworkManager::Link",
-            "AWS::NetworkManager::Site",
             "AWS::Panorama::Package",
             "AWS::Pinpoint::App",
             "AWS::Redshift::ScheduledAction",
@@ -598,12 +594,10 @@ class PolicyMetaLint(BaseTest):
             'AWS::Transfer::Workflow',
             #
             # 'AWS::ApiGatewayV2::Stage',
-            'AWS::Athena::DataCatalog',
-            'AWS::Athena::WorkGroup',
             'AWS::AutoScaling::ScheduledAction',
             'AWS::Backup::BackupSelection',
             'AWS::Backup::RecoveryPoint',
-            'AWS::CodeDeploy::DeploymentConfig',
+            # 'AWS::CodeDeploy::DeploymentConfig',
             'AWS::Config::ConformancePackCompliance',
             'AWS::Config::ResourceCompliance',
             'AWS::Detective::Graph',
@@ -655,15 +649,12 @@ class PolicyMetaLint(BaseTest):
             'AWS::AccessAnalyzer::Analyzer',
             'AWS::WorkSpaces::ConnectionAlias',
             'AWS::DMS::ReplicationSubnetGroup',
-            'AWS::StepFunctions::Activity',
             'AWS::Route53Resolver::ResolverEndpoint',
             'AWS::Route53Resolver::ResolverRule',
             'AWS::Route53Resolver::ResolverRuleAssociation',
             'AWS::DMS::EventSubscription',
             'AWS::GlobalAccelerator::Accelerator',
-            'AWS::Athena::DataCatalog',
             'AWS::EC2::TransitGatewayAttachment',
-            'AWS::Athena::WorkGroup',
             'AWS::GlobalAccelerator::EndpointGroup',
             'AWS::GlobalAccelerator::Listener',
             'AWS::DMS::Certificate',
@@ -717,6 +708,7 @@ class PolicyMetaLint(BaseTest):
             'AWS::SageMaker::EndpointConfig',
             'AWS::DMS::ReplicationInstance',
             'AWS::DMS::ReplicationTask',
+            'AWS::SES::MailManagerIngressPoint',
         }
         bad_types = resource_config_types.difference(config_types)
         bad_types = bad_types.difference(invalid_ignore)
@@ -727,7 +719,7 @@ class PolicyMetaLint(BaseTest):
     def test_resource_meta_with_class(self):
         missing = set()
         for k, v in manager.resources.items():
-            if k in ('rest-account', 'account'):
+            if k in ('rest-account', 'account', 'quicksight-account'):
                 continue
             if not issubclass(v.resource_type, TypeInfo):
                 missing.add(k)
@@ -737,7 +729,8 @@ class PolicyMetaLint(BaseTest):
     def test_resource_type_empty_metadata(self):
         empty = set()
         for k, v in manager.resources.items():
-            if k in ('rest-account', 'account', 'codedeploy-deployment', 'sagemaker-cluster'):
+            if k in ('rest-account', 'account', 'codedeploy-deployment', 'sagemaker-cluster',
+                     'networkmanager-core', 'quicksight-account', 'ses-dedicated-ip-pool'):
                 continue
             for rk, rv in v.resource_type.__dict__.items():
                 if rk[0].isalnum() and rv is None:
@@ -877,7 +870,7 @@ class PolicyMetaLint(BaseTest):
             'snowball-cluster', 'snowball', 'ssm-activation',
             'healthcheck', 'event-rule-target', 'log-metric',
             'support-case', 'transit-attachment', 'config-recorder',
-            'apigw-domain-name', 'backup-job'}
+            'apigw-domain-name', 'backup-job', 'quicksight-account', 'codedeploy-config'}
 
         missing_method = []
         for k, v in manager.resources.items():

@@ -16,13 +16,14 @@ from c7n.manager import resources
 from c7n.resources.securityhub import OtherResourcePostFinding, PostFinding
 from c7n.utils import (
     chunks,
-    local_session,
-    type_schema,
-    get_retry,
-    parse_cidr,
     get_eni_resource_type,
+    get_retry,
+    jmespath_compile,
     jmespath_search,
-    jmespath_compile
+    local_session,
+    merge_dict,
+    parse_cidr,
+    type_schema,
 )
 from c7n.resources.aws import shape_validate
 from c7n.resources.shield import IsEIPShieldProtected, SetEIPShieldProtection
@@ -1613,7 +1614,11 @@ class SGPermission(Filter):
                 matched.append(perm)
 
         if matched:
-            resource.setdefault('Matched%s' % self.ip_permissions_key, []).extend(matched)
+            matched_annotation = resource.setdefault('Matched%s' % self.ip_permissions_key, [])
+            # If the same rule matches multiple filters, only add it to the match annotation
+            # once. Note: Because we're looking for unique dicts and those aren't hashable,
+            # we can't conveniently use set() to de-duplicate rules.
+            matched_annotation.extend(m for m in matched if m not in matched_annotation)
             return True
 
 
@@ -2957,6 +2962,11 @@ class SetFlowLogs(BaseAction):
         ]
 
     def validate(self):
+        if set(self.legacy_schema).intersection(self.data) and 'attrs' in self.data:
+            raise PolicyValidationError(
+                "set-flow-log: legacy top level keys aren't compatible with `attrs` mapping"
+            )
+
         self.convert()
         attrs = dict(self.data['attrs'])
         model = self.manager.get_model()
@@ -2970,7 +2980,7 @@ class SetFlowLogs(BaseAction):
         for k in set(self.legacy_schema).intersection(data):
             attrs[k] = data.pop(k)
         self.source_data = self.data
-        self.data['attrs'] = attrs
+        self.data['attrs'] = merge_dict(attrs, self.data.get('attrs', {}))
 
     def run_client_op(self, op, params, log_err_codes=()):
         try:
@@ -3001,7 +3011,7 @@ class SetFlowLogs(BaseAction):
         self.run_client_op(
             client.delete_flow_logs,
             {'FlowLogIds': [f['FlowLogId'] for f in flow_logs]},
-            ('InvalidParameterValue',)
+            ('InvalidParameterValue', 'InvalidFlowLogId.NotFound',)
         )
 
     def process(self, resources):
@@ -3009,7 +3019,9 @@ class SetFlowLogs(BaseAction):
         enabled = self.data.get('state', True)
 
         if not enabled:
-            return self.delete_flow_logs(client, resources)
+            model_id = self.manager.get_model().id
+            rids = [r[model_id] for r in resources]
+            return self.delete_flow_logs(client, rids)
 
         model = self.manager.get_model()
         params = {'ResourceIds': [r[model.id] for r in resources]}
@@ -3274,4 +3286,50 @@ class CrossAZRouteTable(Filter):
             if self.process_route_table(subnets, nat_subnets, resource):
                 results.append(resource)
 
+        return results
+
+
+@NetworkAddress.filter_registry.register('used-by')
+class UsedByNetworkAddress(Filter):
+    """Filter Elastic IPs to find the resource type that the network
+    interface that the Elastic IP is associated with is attached to.
+
+    This filter is useful for limiting the types of resources to
+    enable AWS Shield Advanced protection.
+
+    :Example:
+
+    .. code-block:: yaml
+
+            policies:
+              - name: eip-shield-advanced-enable
+                resource: aws.elastic-ip
+                filters:
+                  - type: used-by
+                    resource-type: elb-net
+                  - type: shield-enabled
+                    state: false
+                actions:
+                  - type: set-shield
+                    state: true
+    """
+    schema = type_schema(
+        'used-by', required=['resource-type'], **{
+            'resource-type': {'type': 'string'}}
+    )
+    permissions = ("ec2:DescribeNetworkInterfaces",)
+
+    def process(self, resources, event=None):
+        eni_ids = []
+        for r in resources:
+            if r.get('NetworkInterfaceId'):
+                eni_ids.append(r['NetworkInterfaceId'])
+        enis = self.manager.get_resource_manager('eni').get_resources(eni_ids)
+        results = []
+        for r in resources:
+            for eni in enis:
+                if r.get('NetworkInterfaceId') == eni['NetworkInterfaceId']:
+                    rtype = get_eni_resource_type(eni)
+                    if rtype == self.data.get('resource-type'):
+                        results.append(r)
         return results

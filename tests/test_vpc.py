@@ -12,6 +12,7 @@ from pytest_terraform import terraform
 
 import pytest
 import jmespath
+from .zpill import ACCOUNT_ID
 
 
 @pytest.mark.audited
@@ -1745,6 +1746,24 @@ class NetworkAddrTest(BaseTest):
         post_response = client.describe_addresses(AllocationIds=[allocation_id])
         self.assertNotIn("AssociationId", post_response["Addresses"][0])
 
+    def test_eip_used_by(self):
+        factory = self.replay_flight_data("test_eip_used_by")
+        p = self.load_policy(
+            {
+                "name": "eip-used-by-ec2",
+                "resource": "network-addr",
+                "filters": [
+                    {
+                        "type": "used-by",
+                        "resource-type": "ec2"
+                    }
+                ]
+            },
+            session_factory=factory, config={'region': 'us-west-2'}
+        )
+        resources = p.run()
+        self.assertEqual(len(resources), 1)
+
 
 class RouteTableTest(BaseTest):
 
@@ -3244,6 +3263,10 @@ class SecurityGroupTest(BaseTest):
                         "Cidr": {
                             "value": "10.42.1.239", "op": "in", "value_type": "cidr"
                         },
+                    },
+                    {
+                        "type": "ingress",
+                        "SelfReference": False
                     }
                 ],
             },
@@ -3907,6 +3930,44 @@ class FlowLogsTest(BaseTest):
         ]
         self.assertEqual(logs[0]["ResourceId"], resources[0]["VpcId"])
 
+    def test_vpc_set_flow_logs_legacy_schema_handling(self):
+        self.assertRaises(
+            PolicyValidationError,
+            self.load_policy,
+            {
+                "name": "c7n-vpc-flow-logs-legacy-schema",
+                "resource": "aws.vpc",
+                "filters": [
+                    {"tag:Name": "FlowLogTest"}, {"type": "flow-logs", "enabled": False}
+                ],
+                "actions": [
+                    {
+                        "type": "set-flow-log",
+                        "LogDestinationType": "s3",
+                        "LogDestination": "arn:aws:s3:::nonsense",
+                        "TrafficType": "ALL",
+                        "attrs": {
+                            "LogDestinationType": "s3",
+                            "LogDestination": "arn:aws:s3:::c7n-test/test.log.gz",
+                            "TrafficType": "ALL",
+                            "TagSpecifications": [
+                                {
+                                    "ResourceType": "vpc-flow-log",
+                                    "Tags": [
+                                        {
+                                            "Key": "Name",
+                                            "Value": "FlowLogTest"
+                                        },
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                ],
+            },
+            session_factory=None
+        )
+
     def test_vpc_delete_flow_logs(self):
         session_factory = self.replay_flight_data("test_vpc_delete_flow_logs")
         p = self.load_policy(
@@ -4205,3 +4266,95 @@ def test_vpc_delete(test, vpc_delete):
         "Vpcs"
     ]
     test.assertFalse(vpcs)
+
+
+@terraform("eip_shield_sync")
+def test_eip_shield_sync(test, eip_shield_sync):
+
+    session_factory = test.replay_flight_data("test_eip_shield_sync_1")
+
+    shield_client = session_factory().client("shield")
+
+    p = test.load_policy(
+        {
+            "name": "eip-shield-sync",
+            "resource": "network-addr",
+            "filters": [
+                {"type": "shield-enabled", "state": False},
+            ],
+            "actions": [{
+                "type": "set-shield",
+                "state": True,
+                "sync": True
+            }
+            ],
+        },
+        config={"account_id": ACCOUNT_ID},
+        session_factory=session_factory,
+    )
+
+    resources = p.run()
+
+    protections = shield_client.list_protections(
+        InclusionFilters={"ResourceTypes": ["ELASTIC_IP_ALLOCATION"]}
+    )
+    for p in protections["Protections"]:
+        if eip_shield_sync["aws_eip.unprotected.allocation_id"] in p["ResourceArn"]:
+            test.addCleanup(shield_client.delete_protection, ProtectionId=p["Id"])
+
+    test.assertEqual(len(resources), 1)
+    test.assertEqual(resources[0]["Tags"][0]["Value"], "unprotected")
+
+    # ensure that there are now 2 EIPs that are shield protected
+    protections = shield_client.list_protections(
+        InclusionFilters={"ResourceTypes": ["ELASTIC_IP_ALLOCATION"]}
+    )
+    test.assertEqual(len(protections["Protections"]), 2)
+
+
+@terraform("eip_shield_sync")
+def test_eip_shield_sync_deleted(test, eip_shield_sync):
+
+    session_factory = test.replay_flight_data("test_eip_shield_sync_2")
+
+    shield_client = session_factory().client("shield")
+    ec2_client = session_factory().client("ec2")
+
+    # delete the original protected resource
+    ec2_client.release_address(AllocationId=eip_shield_sync["aws_eip.protected.allocation_id"])
+
+    p = test.load_policy(
+        {
+            "name": "eip-shield-sync",
+            "resource": "network-addr",
+            "filters": [
+                {"type": "shield-enabled", "state": False},
+            ],
+            "actions": [{
+                "type": "set-shield",
+                "state": True,
+                "sync": True
+            }
+            ],
+        },
+        config={"account_id": ACCOUNT_ID},
+        session_factory=session_factory,
+    )
+
+    resources = p.run()
+
+    protections = shield_client.list_protections(
+        InclusionFilters={"ResourceTypes": ["ELASTIC_IP_ALLOCATION"]}
+    )
+    for p in protections["Protections"]:
+        if eip_shield_sync["aws_eip.unprotected.allocation_id"] in p["ResourceArn"]:
+            test.addCleanup(shield_client.delete_protection, ProtectionId=p["Id"])
+
+    test.assertEqual(len(resources), 1)
+    test.assertEqual(resources[0]["Tags"][0]["Value"], "unprotected")
+
+    # ensure that there is only 1 EIP that are shield protected after sync
+    protections = shield_client.list_protections(
+        InclusionFilters={"ResourceTypes": ["ELASTIC_IP_ALLOCATION"]}
+    )
+    test.assertEqual(len(protections["Protections"]), 1)

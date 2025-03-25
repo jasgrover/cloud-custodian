@@ -69,6 +69,26 @@ class MetricFilter(Filter):
 
     :example:
 
+    Find VMs with a maximum Percentage CPU at or below 10% over the last 24 hours (note the use of
+    ``no_data_action: to_zero`` to treat missing metric values as zeroes)
+
+    .. code-block:: yaml
+
+        policies:
+          - name: find-underused-vms
+            description: Find VMs with maximum cpu <= 10% over the last 24 hours
+            resource: azure.vm
+            filters:
+              - type: metric
+                metric: Percentage CPU
+                aggregation: maximum
+                op: lte
+                threshold: 10
+                timeframe: 24
+                no_data_action: to_zero
+
+    :example:
+
     Find KeyVaults with more than 1000 API hits in the last hour
 
     .. code-block:: yaml
@@ -126,6 +146,7 @@ class MetricFilter(Filter):
             'metric': {'type': 'string'},
             'op': {'enum': list(scalar_ops.keys())},
             'threshold': {'type': 'number'},
+            'metric_namespace': {'type': 'string'},
             'timeframe': {'type': 'number'},
             'interval': {'enum': [
                 'PT1M', 'PT5M', 'PT15M', 'PT30M', 'PT1H', 'PT6H', 'PT12H', 'P1D']},
@@ -156,6 +177,8 @@ class MetricFilter(Filter):
         self.filter = self.data.get('filter', None)
         # Include or exclude resources if there is no metric data available
         self.no_data_action = self.data.get('no_data_action', 'exclude')
+        # default to no namespace if not passed in
+        self.metricnamespace = self.data.get("metric_namespace", None)
 
     def process(self, resources, event=None):
         # Import utcnow function as it may have been overridden for testing purposes
@@ -185,6 +208,7 @@ class MetricFilter(Filter):
                 interval=self.interval,
                 metricnames=self.metric,
                 aggregation=self.aggregation,
+                metricnamespace=self.metricnamespace,
                 filter=self.get_filter(resource)
             )
         except HttpResponseError:
